@@ -75,16 +75,22 @@ type
     procedure Connect;
     procedure Disconnect(const ALogout: boolean = False);
   public
+    procedure CheckIsValidNumber(APhone: string);
     procedure GetQrCode;
     procedure GetBatteryLevel; 
     procedure GetUnreadMessages;  
-    procedure GetAllContacts; 
+    procedure GetAllContacts;
+    procedure GetAllGroupContacts(AGroupId: String);
     procedure GetAllGroups;
     procedure GetMyNumber;
+    procedure GroupAddParticipant(const AGroupId, ANumber: string);
+    procedure GroupRemoveParticipant(const AGroupId, ANumber: string);
     procedure ReadMsg(const ANumber: String);
     procedure SendContact(const ANumber, AContact: string);
     procedure SendMsg(const ANumber, AMsg: string);
+    procedure SendButtons(const ANumber, AMsg, AButtons, AFooter: string);
     procedure SendMsgBase64(const ANumber, AMsg, AFileName, ACaption: string);
+    procedure ClearChat(const ANumberOrGroupId: string);
   public
     property MyNumber: String read FMyNumber write FMyNumber;
     property Conected: boolean read FConected;
@@ -419,6 +425,15 @@ begin
   end;
 end;
 
+procedure TWBotCEForm.CheckIsValidNumber(APhone: string);
+var
+  VScript: string;
+begin
+  VScript := CMD_CHECK_NUMBER_STATUS;
+  VScript := ReplaceVAR(VScript, '<#PHONE#>', APhone);
+  ExecuteScript(VScript);
+end;
+
 procedure TWBotCEForm.GetQrCode;
 begin
   if (not(FBrowser)) then
@@ -440,6 +455,15 @@ end;
 procedure TWBotCEForm.GetAllContacts;
 begin
   ExecuteScript(CMD_GET_ALL_CONTACTS);
+end;
+
+procedure TWBotCEForm.GetAllGroupContacts(AGroupId: String);
+var
+  VScript: string;
+begin
+  VScript := CMD_GET_ALL_GROUP_CONTACTS;
+  VScript := ReplaceVAR(VScript, '<#GROUP_ID#>', AGroupId);
+  ExecuteScript(VScript);
 end;
 
 procedure TWBotCEForm.GetAllGroups;
@@ -465,7 +489,7 @@ procedure TWBotCEForm.SendContact(const ANumber, AContact: string);
 var
   VScript: string;
 begin
-  VScript := CMD_SEND_CHAT_STATE + LineEnding + CMD_SEND_CONTACT;
+  VScript := CMD_SEND_CONTACT;
   VScript := ReplaceVAR(VScript, '<#PHONE#>', ANumber);
   VScript := ReplaceVAR(VScript, '<#CONTACT#>', AContact);
   ExecuteScript(VScript);
@@ -475,9 +499,22 @@ procedure TWBotCEForm.SendMsg(const ANumber, AMsg: string);
 var
   VScript: string;
 begin
-  VScript := CMD_SEND_CHAT_STATE + LineEnding + CMD_SEND_MSG;
+  VScript := CMD_SEND_MSG;
   VScript := ReplaceVAR(VScript, '<#PHONE#>', ANumber);
   VScript := ReplaceVAR(VScript, '<#MSG#>', AMsg);
+  ExecuteScript(VScript);
+end;
+
+procedure TWBotCEForm.SendButtons(const ANumber, AMsg, AButtons, AFooter: string
+  );
+var
+  VScript: string;
+begin
+  VScript := CMD_SEND_BUTTONS;
+  VScript := ReplaceVAR(VScript, '<#PHONE#>', ANumber);
+  VScript := ReplaceVAR(VScript, '<#MSG#>', AMsg);
+  VScript := ReplaceVAR(VScript, '<#BUTTONS#>', AButtons);
+  VScript := ReplaceVAR(VScript, '<#FOOTER#>', AFooter);
   ExecuteScript(VScript);
 end;
 
@@ -486,11 +523,40 @@ procedure TWBotCEForm.SendMsgBase64(const ANumber, AMsg, AFileName,
 var
   VScript: string;
 begin
-  VScript := CMD_SEND_CHAT_STATE + LineEnding + CMD_SEND_MSG_BASE64; 
+  VScript := CMD_SEND_MSG_BASE64;
   VScript := ReplaceVAR(VScript, '<#PHONE#>', ANumber);
   VScript := ReplaceVAR(VScript, '<#MSG#>', AMsg); 
   VScript := ReplaceVAR(VScript, '<#FILENAME#>', AFileName);
   VScript := ReplaceVAR(VScript, '<#CAPTION#>', ACaption);
+  ExecuteScript(VScript);
+end;
+
+procedure TWBotCEForm.ClearChat(const ANumberOrGroupId: string);
+var
+  VScript: string;
+begin
+  VScript := CMD_CLEARCHAT;
+  VScript := ReplaceVAR(VScript, '<#PHONE#>', ANumberOrGroupId);
+  ExecuteScript(VScript);
+end;
+
+procedure TWBotCEForm.GroupAddParticipant(const AGroupId, ANumber: string);
+var
+  VScript: string;
+begin
+  VScript := CMD_GROUP_ADD_PARTICIPANT;
+  VScript := ReplaceVAR(VScript, '<#GROUP_ID#>', AGroupId);
+  VScript := ReplaceVAR(VScript, '<#PARTICIPANT_NUMBER#>', ANumber);
+  ExecuteScript(VScript);
+end;
+
+procedure TWBotCEForm.GroupRemoveParticipant(const AGroupId, ANumber: string);
+var
+  VScript: string;
+begin
+  VScript := CMD_GROUP_REMOVE_PARTICIPANT;
+  VScript := ReplaceVAR(VScript, '<#GROUP_ID#>', AGroupId);
+  VScript := ReplaceVAR(VScript, '<#PARTICIPANT_NUMBER#>', ANumber);
   ExecuteScript(VScript);
 end;
 
